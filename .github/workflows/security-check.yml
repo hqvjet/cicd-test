@@ -1,0 +1,63 @@
+name: Build, Deploy and Security Check
+
+on:
+  push:
+    branches:
+      - develop
+      - feature/*
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout mã nguồn từ GitHub
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # 2. Cài đặt Docker
+      - name: Set up Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker.io
+
+      # 3. Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t cicd-test .
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      # 4. Deploy ứng dụng lên server (giả sử server có sẵn)
+      - name: Deploy application to server
+        run: |
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "cd /home/viethq/cicd-test && git pull && docker-compose up -d"
+
+      # 5. Cài đặt Lynis
+      # - name: Install Lynis
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install lynis
+      #
+      # # 6. Chạy kiểm tra bảo mật với Lynis trên server
+      - name: Run Lynis security audit on server
+        run: |
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo lynis audit system"
+
+      # 7. Upload báo cáo Lynis
+      - name: Upload Lynis report
+        uses: actions/upload-artifact@v2
+        with:
+          name: lynis-report
+          path: /var/log/lynis.log
+
+      # 8. Gửi thông báo nếu có lỗi bảo mật
+      - name: Send notification if issues found
+        if: failure()  # Gửi thông báo nếu có lỗi bảo mật
+        run: |
+          echo "Security issues detected, sending email notification..."
+          # Các lệnh gửi thông báo qua email hoặc Slack
