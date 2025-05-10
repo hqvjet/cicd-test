@@ -60,4 +60,5 @@ jobs:
         if: failure()
         run: |
           echo "Security issues detected, sending email notification..."
+        
 
