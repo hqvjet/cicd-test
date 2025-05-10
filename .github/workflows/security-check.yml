@@ -66,7 +66,7 @@ jobs:
 
       # 10. Upload báo cáo Lynis
       - name: Upload Lynis report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lynis-report
           path: /var/log/lynis.log  # Đảm bảo rằng đường dẫn chính xác và file có tồn tại
