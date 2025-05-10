@@ -53,27 +53,28 @@ jobs:
       #   run: |
       #     ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo apt-get update && sudo apt-get install lynis"
       #
+
       # # 8. Chạy kiểm tra bảo mật với Lynis trên server
-      # - name: Run Lynis security audit on server
-      #   run: |
-      #     ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo lynis audit system"
-      #
-      # # 9. Kiểm tra sự tồn tại của báo cáo Lynis
-      # - name: Check if Lynis log exists
-      #   run: |
-      #     ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "if [ ! -f /var/log/lynis.log ]; then echo 'Lynis log not found!'; exit 1; fi"
-      #
-      # # 10. Upload báo cáo Lynis
-      # - name: Upload Lynis report
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: lynis-report
-      #     path: /var/log/lynis.log  # Đảm bảo rằng đường dẫn chính xác và file có tồn tại
-      #
-      # # 11. Gửi thông báo nếu có lỗi bảo mật
-      # - name: Send notification if issues found
-      #   if: failure()  # Gửi thông báo nếu có lỗi bảo mật
-      #   run: |
-      #     echo "Security issues detected, sending email notification..."
-      #     # Các lệnh gửi thông báo qua email hoặc Slack
-      #
+      - name: Run Lynis security audit on server
+        run: |
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo lynis audit system"
+
+      # 9. Kiểm tra sự tồn tại của báo cáo Lynis
+      - name: Check if Lynis log exists
+        run: |
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "if [ ! -f /var/log/lynis.log ]; then echo 'Lynis log not found!'; exit 1; fi"
+
+      # 10. Upload báo cáo Lynis
+      - name: Upload Lynis report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lynis-report
+          path: /var/log/lynis.log  # Đảm bảo rằng đường dẫn chính xác và file có tồn tại
+
+      # 11. Gửi thông báo nếu có lỗi bảo mật
+      - name: Send notification if issues found
+        if: failure()  # Gửi thông báo nếu có lỗi bảo mật
+        run: |
+          echo "Security issues detected, sending email notification..."
+          # Các lệnh gửi thông báo qua email hoặc Slack
+
