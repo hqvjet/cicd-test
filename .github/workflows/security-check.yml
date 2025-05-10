@@ -15,7 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      2. Cài đặt Docker và containerd từ kho Docker chính thức
+      # 2. Cài đặt Docker và containerd từ kho Docker chính thức
       - name: Set up Docker
         run: |
           sudo apt-get remove docker docker-engine docker.io containerd runc
