@@ -3,19 +3,17 @@ name: Build, Deploy and Security Check
 on:
   push:
     branches:
-      - develop   # Trigger khi có thay đổi trên nhánh 'develop'
-      - feature/* # Trigger khi có thay đổi trên nhánh tính năng (feature/*)
+      - develop   # Trigger develop branch
+      - feature/* # Trigger feature branch
 
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout mã nguồn từ GitHub
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # 2. Cài đặt Docker và containerd từ kho Docker chính thức
       - name: Set up Docker
         run: |
           sudo apt-get remove docker docker-engine docker.io containerd runc
@@ -26,55 +24,40 @@ jobs:
           sudo apt-get update
           sudo apt-get install docker-ce docker-ce-cli containerd.io
 
-      # 3. Build Docker image cho ứng dụng
       - name: Build Docker image
         run: |
           docker build -t cicd-test .
 
-      # 4. Thiết lập SSH key cho GitHub Actions
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      # 5. Kiểm tra kết nối SSH đến server
       - name: Test SSH connection
         run: |
           ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "echo 'SSH connection successful!'"
 
-      # 6. Deploy ứng dụng lên server
       - name: Deploy application to server
         run: |
           ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "cd /home/viethq/cicd-test && git pull && docker-compose up -d"
 
-      # # 7. Cài đặt Lynis trên server
-      # - name: Install Lynis
-      #   run: |
-      #     ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo apt-get update && sudo apt-get install lynis"
-      #
-
-      # # 8. Chạy kiểm tra bảo mật với Lynis trên server
       - name: Run Lynis security audit on server
         run: |
-          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo lynis audit system"
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "lynis audit system"
 
-      # 9. Kiểm tra sự tồn tại của báo cáo Lynis
       - name: Check if Lynis log exists
         run: |
           ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "if [ ! -f /var/log/lynis.log ]; then echo 'Lynis log not found!'; exit 1; fi"
 
-      # 10. Upload báo cáo Lynis
       - name: Upload Lynis report
         uses: actions/upload-artifact@v4
         with:
           name: lynis-report
-          path: /var/log/lynis.log  # Đảm bảo rằng đường dẫn chính xác và file có tồn tại
+          path: /var/log/lynis.log
 
-      # 11. Gửi thông báo nếu có lỗi bảo mật
       - name: Send notification if issues found
-        if: failure()  # Gửi thông báo nếu có lỗi bảo mật
+        if: failure()
         run: |
           echo "Security issues detected, sending email notification..."
-          # Các lệnh gửi thông báo qua email hoặc Slack
 
