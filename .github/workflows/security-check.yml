@@ -44,10 +44,10 @@ jobs:
           ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "cd /home/viethq/cicd-test && git pull && docker-compose up -d"
 
       # 7. Cài đặt Lynis
-      - name: Install Lynis
-        run: |
-          sudo apt-get update
-          sudo apt-get install lynis
+      # - name: Install Lynis
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install lynis
 
       # 8. Chạy kiểm tra bảo mật với Lynis trên server
       - name: Run Lynis security audit on server
@@ -55,15 +55,15 @@ jobs:
           ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo lynis audit system"
 
       # 9. Upload báo cáo Lynis
-      - name: Upload Lynis report
-        uses: actions/upload-artifact@v2
-        with:
-          name: lynis-report
-          path: /var/log/lynis.log
-
-      # 10. Gửi thông báo nếu có lỗi bảo mật
-      - name: Send notification if issues found
-        if: failure()  # Gửi thông báo nếu có lỗi bảo mật
-        run: |
-          echo "Security issues detected, sending email notification..."
-
+      # - name: Upload Lynis report
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: lynis-report
+      #     path: /var/log/lynis.log
+      #
+      # # 10. Gửi thông báo nếu có lỗi bảo mật
+      # - name: Send notification if issues found
+      #   if: failure()  # Gửi thông báo nếu có lỗi bảo mật
+      #   run: |
+      #     echo "Security issues detected, sending email notification..."
+      #
