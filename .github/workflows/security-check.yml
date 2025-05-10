@@ -44,21 +44,20 @@ jobs:
 
       - name: Run Lynis security audit on server
         run: |
-          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "lynis audit system"
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "lynis audit system | tee /tmp/lynis_output.log"
 
-      - name: Check if Lynis log exists
+      - name: Check Lynis output for issues
         run: |
-          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "if [ ! -f /var/log/lynis.log ]; then echo 'Lynis log not found!'; exit 1; fi"
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "if grep -q 'Warning' /tmp/lynis_output.log || grep -q 'Suggestion' /tmp/lynis_output.log; then echo 'Security issues found!'; exit 1; else echo 'No security issues detected.'; fi"
 
       - name: Upload Lynis report
         uses: actions/upload-artifact@v4
         with:
           name: lynis-report
-          path: /var/log/lynis.log
+          path: /tmp/lynis_output.log
 
       - name: Send notification if issues found
         if: failure()
         run: |
           echo "Security issues detected, sending email notification..."
-        
 
