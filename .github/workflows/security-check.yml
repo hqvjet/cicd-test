@@ -26,38 +26,44 @@ jobs:
         run: |
           docker build -t cicd-test .
 
+      # 4. Set up SSH key for GitHub Actions
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
-      # 4. Deploy ứng dụng lên server (giả sử server có sẵn)
+      # 5. Kiểm tra kết nối SSH đến server
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "echo 'SSH connection successful!'"
+
+      # 6. Deploy ứng dụng lên server
       - name: Deploy application to server
         run: |
           ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "cd /home/viethq/cicd-test && git pull && docker-compose up -d"
 
-      # 5. Cài đặt Lynis
-      # - name: Install Lynis
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install lynis
-      #
-      # # 6. Chạy kiểm tra bảo mật với Lynis trên server
+      # 7. Cài đặt Lynis
+      - name: Install Lynis
+        run: |
+          sudo apt-get update
+          sudo apt-get install lynis
+
+      # 8. Chạy kiểm tra bảo mật với Lynis trên server
       - name: Run Lynis security audit on server
         run: |
           ssh -o StrictHostKeyChecking=no viethq@113.160.225.29 "sudo lynis audit system"
 
-      # 7. Upload báo cáo Lynis
+      # 9. Upload báo cáo Lynis
       - name: Upload Lynis report
         uses: actions/upload-artifact@v2
         with:
           name: lynis-report
           path: /var/log/lynis.log
 
-      # 8. Gửi thông báo nếu có lỗi bảo mật
+      # 10. Gửi thông báo nếu có lỗi bảo mật
       - name: Send notification if issues found
         if: failure()  # Gửi thông báo nếu có lỗi bảo mật
         run: |
           echo "Security issues detected, sending email notification..."
-          # Các lệnh gửi thông báo qua email hoặc Slack
+
